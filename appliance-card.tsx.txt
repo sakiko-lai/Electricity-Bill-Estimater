@@ -1,0 +1,165 @@
+"use client"
+
+import { Trash2, Edit2, Check, X } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useState } from "react"
+import type { Appliance } from "@/app/page"
+
+interface ApplianceCardProps {
+  appliance: Appliance
+  onUpdate: (id: string, updates: Partial<Appliance>) => void
+  onDelete: (id: string) => void
+}
+
+const colorMap = {
+  purple: {
+    border: "border-electric-purple",
+    bg: "bg-electric-purple/10",
+    text: "text-electric-purple",
+    shadow: "shadow-electric-purple/20",
+  },
+  cyan: {
+    border: "border-cyan",
+    bg: "bg-cyan/10",
+    text: "text-cyan",
+    shadow: "shadow-cyan/20",
+  },
+  pink: {
+    border: "border-hot-pink",
+    bg: "bg-hot-pink/10",
+    text: "text-hot-pink",
+    shadow: "shadow-hot-pink/20",
+  },
+  lime: {
+    border: "border-lime",
+    bg: "bg-lime/10",
+    text: "text-lime",
+    shadow: "shadow-lime/20",
+  },
+}
+
+export function ApplianceCard({ appliance, onUpdate, onDelete }: ApplianceCardProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState(appliance.name)
+  const [editWatts, setEditWatts] = useState(appliance.watts.toString())
+  const [editHours, setEditHours] = useState(appliance.hoursPerDay.toString())
+
+  const colors = colorMap[appliance.color as keyof typeof colorMap] || colorMap.purple
+
+  const handleSave = () => {
+    onUpdate(appliance.id, {
+      name: editName,
+      watts: Number.parseFloat(editWatts) || 0,
+      hoursPerDay: Number.parseFloat(editHours) || 0,
+    })
+    setIsEditing(false)
+  }
+
+  const handleCancel = () => {
+    setEditName(appliance.name)
+    setEditWatts(appliance.watts.toString())
+    setEditHours(appliance.hoursPerDay.toString())
+    setIsEditing(false)
+  }
+
+  const dailyKwh = (appliance.watts * appliance.hoursPerDay) / 1000
+  const monthlyKwh = dailyKwh * 30
+
+  return (
+    <div
+      className={bg-card border-2 ${colors.border} rounded-2xl p-6 shadow-xl ${colors.shadow} transition-all hover:scale-[1.02]}
+    >
+      <div className="flex items-start justify-between mb-4">
+        {isEditing ? (
+          <Input
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            className="text-xl font-bold bg-muted border-border"
+          />
+        ) : (
+          <h3 className="text-xl font-bold">{appliance.name}</h3>
+        )}
+        <div className="flex gap-2">
+          {isEditing ? (
+            <>
+              <Button size="sm" variant="ghost" onClick={handleSave} className="h-8 w-8 p-0 hover:bg-accent/20">
+                <Check className="w-4 h-4 text-accent" />
+              </Button>
+              <Button size="sm" variant="ghost" onClick={handleCancel} className="h-8 w-8 p-0 hover:bg-muted">
+                <X className="w-4 h-4" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsEditing(true)}
+                className="h-8 w-8 p-0 hover:bg-muted"
+              >
+                <Edit2 className="w-4 h-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onDelete(appliance.id)}
+                className="h-8 w-8 p-0 hover:bg-destructive/20"
+              >
+                <Trash2 className="w-4 h-4 text-red-500" />
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className={${colors.bg} rounded-xl p-4}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground">Power</span>
+            {isEditing ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  value={editWatts}
+                  onChange={(e) => setEditWatts(e.target.value)}
+                  className="w-24 h-8 bg-card border-border"
+                />
+                <span className={text-sm font-semibold ${colors.text}}>W</span>
+              </div>
+            ) : (
+              <span className={text-lg font-bold ${colors.text}}>{appliance.watts}W</span>
+            )}
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Hours/Day</span>
+            {isEditing ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  value={editHours}
+                  onChange={(e) => setEditHours(e.target.value)}
+                  className="w-24 h-8 bg-card border-border"
+                />
+                <span className={text-sm font-semibold ${colors.text}}>h</span>
+              </div>
+            ) : (
+              <span className={text-lg font-bold ${colors.text}}>{appliance.hoursPerDay}h</span>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-muted/50 rounded-lg p-3">
+            <p className="text-xs text-muted-foreground mb-1">Daily</p>
+            <p className={text-lg font-bold ${colors.text}}>{dailyKwh.toFixed(2)} kWh</p>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-3">
+            <p className="text-xs text-muted-foreground mb-1">Monthly</p>
+            <p className={text-lg font-bold ${colors.text}}>{monthlyKwh.toFixed(2)} kWh</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
